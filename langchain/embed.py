@@ -18,17 +18,3 @@ def embed_chunks(chunks):
     # Generate embeddings for all chunks in a single batch
     embeddings = model.encode(chunks, convert_to_tensor=False)
     return embeddings
-
-if __name__ == "__main__":
-    # Example usage
-    pdf_file_path = "m.pdf"  # Path to the PDF file
-    
-    # Use the chunk_pdf function from chunking.py to get text chunks
-    chunks = chunk_pdf(pdf_file_path, chunk_size=500)
-    
-    # Embed the chunks using the locally loaded model
-    embeddings = embed_chunks(chunks)
-    
-    # Output the embeddings (you can store them in a database if needed)
-    for idx, embedding in enumerate(embeddings):
-        print(f"Embedding {idx + 1}: {embedding[:5]}... [truncated]")

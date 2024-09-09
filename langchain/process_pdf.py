@@ -41,8 +41,3 @@ def chunk_pdf(pdf_file_path, chunk_size=500):
     text = extract_pdf_text(pdf_file_path)
     chunks = chunk_text(text, chunk_size)   
     return chunks
-
-if __name__ == "__main__":
-    pdf_file_path = "m.pdf"
-    chunks = chunk_pdf(pdf_file_path, chunk_size=500)
-    print(len(chunks))
