@@ -1,7 +1,7 @@
 from embed import embed_chunks  # Your existing embedding function
 from process_pdf import chunk_pdf  # Your existing PDF chunking function
 from storage_module import StorageManager  # The storage module we created
-
+import time
 # Configuration for PostgreSQL
 pg_config = {
     'dbname': 'ragllm',
@@ -14,18 +14,21 @@ pg_config = {
 # Initialize the storage manager
 storage_manager = StorageManager(pg_config)
 
-#Create a Qdrant collection
-storage_manager.create_qdrant_collection()
+def process_and_store_pdf(pdf_file_path):
+    from embed import embed_chunks
+    from process_pdf import chunk_pdf
 
-# Load your PDF, chunk it, and embed the chunks
-pdf_file_path = "m.pdf"
-chunks = chunk_pdf(pdf_file_path, chunk_size=500)
-embeddings = embed_chunks(chunks)
+    # Create a Qdrant collection
+    storage_manager.create_qdrant_collection()
 
-# Store each chunk and its embedding in PostgreSQL and Qdrant
-for i, chunk_text in enumerate(chunks):
-    embedding = embeddings[i]  # Get the corresponding embedding
-    storage_manager.store_chunk(chunk_number=i, chunk_text=chunk_text, embedding=embedding)
+    # Load your PDF, chunk it, and embed the chunks
+    chunks = chunk_pdf(pdf_file_path, chunk_size=500)
+    embeddings = embed_chunks(chunks)
 
-# Close the storage manager when done
-storage_manager.close()
+    # Store each chunk and its embedding
+    for i, chunk_text in enumerate(chunks):
+        embedding = embeddings[i]
+        storage_manager.store_chunk(chunk_number=i, chunk_text=chunk_text, embedding=embedding)
+
+if __name__ == "__main__":
+    process_and_store_pdf("m.pdf")
