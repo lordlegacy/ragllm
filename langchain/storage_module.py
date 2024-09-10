@@ -30,6 +30,7 @@ class StorageManager:
             self.pg_conn.commit()
         except Exception as e:
             print(f"Error inserting into PostgreSQL: {e}")
+            self.pg_conn.rollback()
         
         # 2. Insert embedding into Qdrant
         try:

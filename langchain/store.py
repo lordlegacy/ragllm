@@ -4,15 +4,18 @@ from storage_module import StorageManager  # The storage module we created
 
 # Configuration for PostgreSQL
 pg_config = {
-    'dbname': 'your_db_name',
-    'user': 'your_username',
-    'password': 'your_password',
+    'dbname': 'ragllm',
+    'user': 'postgres',
+    'password': 'wearelegion',
     'host': 'localhost',
     'port': '5432'
 }
 
 # Initialize the storage manager
 storage_manager = StorageManager(pg_config)
+
+#Create a Qdrant collection
+storage_manager.create_qdrant_collection()
 
 # Load your PDF, chunk it, and embed the chunks
 pdf_file_path = "m.pdf"
