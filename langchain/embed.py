@@ -1,20 +1,16 @@
-# embedding_local.py
 from sentence_transformers import SentenceTransformer
-from process_pdf import chunk_pdf  # Importing the chunking module for chunking PDFs
+import torch
 
-# Load the model locally
-model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+# Set up device for embedding model (GPU if available)
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-def embed_chunks(chunks):
-    """
-    Embeds the given chunks using a locally loaded sentence-transformers model.
-    
-    Parameters:
-    - chunks (list of str): List of text chunks to embed.
-    
-    Returns:
-    - List of embeddings for each chunk.
-    """
-    # Generate embeddings for all chunks in a single batch
-    embeddings = model.encode(chunks, convert_to_tensor=False)
+# Load the model once and reuse it
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2', device=device)
+
+def embed_chunks(chunks, batch_size=32):
+    embeddings = []
+    for i in range(0, len(chunks), batch_size):
+        batch_chunks = chunks[i:i + batch_size]
+        batch_embeddings = model.encode(batch_chunks, convert_to_tensor=False)
+        embeddings.extend(batch_embeddings)
     return embeddings
