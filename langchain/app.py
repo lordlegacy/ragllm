@@ -1,29 +1,32 @@
 import os
 import time
+import openai
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from storage_manager import StorageManager
 from process_pdf import chunk_pdf
-from embed import embed_chunks
+from embed import embed_chunks, openai_embed_chunks
+from config import Config
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
-pg_config = {
-    'dbname': 'ragllm',
-    'user': 'postgres',
-    'password': 'wearelegion',
-    'host': 'localhost',
-    'port': '5432'
-}
-qdrant_host = "localhost"
-qdrant_port = 6333
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Storage Manager instance
-storage_manager = StorageManager(pg_config, qdrant_host, qdrant_port)
+storage_manager = StorageManager(
+    pg_config={
+        'dbname': Config.POSTGRES_DB,
+        'user': Config.POSTGRES_USER,
+        'password': Config.POSTGRES_PASSWORD,
+        'host': Config.POSTGRES_HOST,
+        'port': Config.POSTGRES_PORT
+    },
+    qdrant_host="localhost",
+    qdrant_port=6333
+)
 
 # Helper function to check file extension
 def allowed_file(filename):
@@ -58,24 +61,37 @@ def upload_pdf():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
-# API route to ask a question and get the closest chunk
+# API route to ask a question and retrieve the answer
 @app.route('/ask', methods=['POST'])
 def ask_question():
     data = request.get_json()
     question = data.get("question", None)
+    model_name = data.get("model", "gpt-3")  # Allow model selection
 
     if not question:
         return jsonify({"error": "Question is required"}), 400
 
-    # Embed the question and search for the closest chunk
+    # Embed the question using OpenAI embeddings
     try:
-        query_embedding = embed_chunks([question])[0]
-        closest_chunk = storage_manager.retrieve_chunk_from_embedding(query_embedding)
-        if closest_chunk:
-            return jsonify({"closest_chunk": closest_chunk}), 200
+        query_embedding = openai_embed_chunks([question])[0]
+
+        # Retrieve 3 closest chunks
+        results = storage_manager.retrieve_multiple_chunks_from_embedding(query_embedding, limit=3)
+        chunks = [result['chunk_text'] for result in results]
+
+        # Pass the question and chunks to the selected LLM (e.g., GPT-3)
+        if model_name == "gpt-3":
+            response = openai.Completion.create(
+                model="text-davinci-003",
+                prompt=f"Question: {question}\nRelevant Information: {chunks}\nAnswer:",
+                max_tokens=150
+            )
+            answer = response.choices[0].text.strip()
         else:
-            return jsonify({"message": "No similar chunk found."}), 404
+            # Default to GPT-3 or handle other models
+            answer = "Selected model is not supported yet."
+
+        return jsonify({"chunks": chunks, "answer": answer}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

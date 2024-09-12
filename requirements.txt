@@ -1,0 +1,7 @@
+Flask==3.0.3
+psycopg2-binary==2.9.9
+PyPDF2==3.0.1
+sentence-transformers==3.0.1
+qdrant-client==1.11.1
+torch==2.4.1  # Optional, if using GPU for sentence embedding
+Werkzeug==3.0.4
