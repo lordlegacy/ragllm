@@ -42,18 +42,74 @@ This system allows users to upload PDF documents, ask questions about their cont
 
 ## Usage
 
-1. Start the application:
-   ```
-   python app.py
-   ```
+The application exposes several HTTP API endpoints for interacting with the RAG-based PDF Q&A system:
 
-2. Open a web browser and navigate to `http://localhost:5000`.
+### 1. Upload and Process PDF
 
-3. Upload a PDF document using the provided interface.
+Process a PDF document already present on the server.
 
-4. Ask questions about the document in the query box.
+- **Endpoint:** `POST /upload`
+- **Headers:** 
+  - `Content-Type: application/json`
+- **Request Body:**
+  ```json
+  {
+    "pdf_name": "document.pdf"
+  }
+  ```
+- **Response:** JSON object with a success message or error.
 
-5. View the generated answers along with the relevant context.
+### 2. Ask Question
+
+Ask a question about the processed documents.
+
+- **Endpoint:** `POST /ask`
+- **Headers:** 
+  - `Content-Type: application/json`
+- **Request Body:**
+  ```json
+  {
+    "question": "What is the main topic?",
+    "model": "gpt-3"  // Optional, defaults to "gpt-3"
+  }
+  ```
+- **Response:** JSON object with relevant chunks and the answer.
+
+### 3. Delete Chunks
+
+Delete chunks and embeddings for a specific PDF.
+
+- **Endpoint:** `DELETE /delete`
+- **Headers:** 
+  - `Content-Type: application/json`
+- **Request Body:**
+  ```json
+  {
+    "pdf_hash": "hash_value"
+  }
+  ```
+- **Response:** JSON object confirming deletion or error message.
+
+### 4. List Processed PDFs
+
+Retrieve a list of all processed PDF hashes.
+
+- **Endpoint:** `GET /list`
+- **Response:** JSON array of processed PDF hashes.
+
+### 5. Health Check
+
+Check if the service is running.
+
+- **Endpoint:** `GET /health`
+- **Response:** JSON object with status "OK" if the service is healthy.
+
+## Notes
+
+- Use these API endpoints to interact with the RAG-based PDF Q&A system. 
+- You can use any HTTP client (e.g., Postman, cURL, or programming language libraries) to make these requests. 
+- Replace the host and port in the URL with the appropriate values where your Flask app is running.
+- The system assumes that PDF files are already present in the server's `uploads` directory. The `/upload` endpoint processes these existing files rather than accepting file uploads directly through the API.
 
 ## How It Works
 
